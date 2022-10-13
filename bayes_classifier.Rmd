@@ -148,10 +148,10 @@ test  <- read.csv(file = test_path, stringsAsFactors = FALSE)
 ```
 
 ```{r}
-tidy_text <- unnest_tokens(train, 'splitted', 'Message', token="words") %>%
-             filter(!splitted %in% stop_words)
+tidy_text <- unnest_tokens(train, 'Word', 'Message', token="words") %>%
+             filter(!Word %in% stop_words)
 
-tidy_text %>% count(splitted,sort=TRUE)
+tidy_text %>% count(Word, sort=TRUE)
 ```
 
 ### Data visualization
@@ -165,34 +165,33 @@ positive examples as a histogram, word cloud etc. Be creative!
 
 ```{r}
 naiveBayes <- setRefClass("naiveBayes",
-                          
-       # here it would be wise to have some vars to store intermediate result
-       # frequency dict etc. Though pay attention to bag of wards! 
-       fields = list(),
-       methods = list(
-                    # prepare your training data as X - bag of words for each of your
-                    # messages and corresponding label for the message encoded as 0 or 1 
-                    # (binary classification task)
-                    fit = function(X, y)
-                    {
-                         # TODO
-                    },
-                    
-                    # return prediction for a single message 
-                    predict = function(message)
-                    {
-                         # TODO
-                    },
-                    
-                    # score you test set so to get the understanding how well you model
-                    # works.
-                    # look at f1 score or precision and recall
-                    # visualize them 
-                    # try how well your model generalizes to real world data! 
-                    score = function(X_test, y_test)
-                    {
-                         # TODO
-                    }
+  # here it would be wise to have some vars to store intermediate result
+  # frequency dict etc. Though pay attention to bag of wards! 
+  fields = list(),
+  methods = list(
+    # prepare your training data as X - bag of words for each of your
+    # messages and corresponding label for the message encoded as 0 or 1 
+    # (binary classification task)
+    fit = function(X, y)
+    {
+         # TODO
+    },
+    
+    # return prediction for a single message 
+    predict = function(message)
+    {
+         # TODO
+    },
+    
+    # score you test set so to get the understanding how well you model
+    # works.
+    # look at f1 score or precision and recall
+    # visualize them 
+    # try how well your model generalizes to real world data! 
+    score = function(X_test, y_test)
+    {
+         # TODO
+    }
 ))
 
 model = naiveBayes()
