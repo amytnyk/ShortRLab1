@@ -80,12 +80,13 @@ the features, while the second one is needed for checking how well your
 classifier works.
 
 ```{r}
-# here goes a list of recommended libraries,
-# though you may install other ones if they are needed
+
 library(tidytext)
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(purrr)
+library(wordcloud)
 ```
 
 ## Instructions
@@ -131,8 +132,8 @@ library(ggplot2)
         of words from your text document.
 
 ```{r}
-list.files(getwd())
-list.files("data")
+list.files(getwd()) # Should print "bayes_classifier.Rmd" "data" "README.md"
+list.files("data")  # Should print "stop_words.txt" "test.csv" "train.csv" 
 ```
 
 ```{r}
@@ -148,10 +149,11 @@ test  <- read.csv(file = test_path, stringsAsFactors = FALSE)
 ```
 
 ```{r}
-tidy_text <- unnest_tokens(train, 'Word', 'Message', token="words") %>%
-             filter(!Word %in% stop_words)
+tidy_text <- train %>% mutate(ID = row_number()) %>% unnest_tokens('Word', 'Message', token="words") %>% filter(!Word %in% stop_words)
 
-tidy_text %>% count(Word, sort=TRUE)
+X_train <- tidy_text %>% select(Word, ID)
+Y_train <- ifelse(tidy_text$Category == "spam", 1, 0)
+
 ```
 
 ### Data visualization
@@ -161,26 +163,25 @@ start processing it. R has very powerful tools to make nice plots and
 visualization. Show what are the most common words for negative and
 positive examples as a histogram, word cloud etc. Be creative!
 
+```{r}
+count_df <- tidy_text %>% count(Word)
+wordcloud(words = count_df$Word, freq = count_df$n, max.words = 300)
+```
+
 ## Classifier implementation
 
 ```{r}
 naiveBayes <- setRefClass("naiveBayes",
-  # here it would be wise to have some vars to store intermediate result
-  # frequency dict etc. Though pay attention to bag of wards! 
   fields = list(),
   methods = list(
-    # prepare your training data as X - bag of words for each of your
-    # messages and corresponding label for the message encoded as 0 or 1 
-    # (binary classification task)
     fit = function(X, y)
     {
-         # TODO
+      
     },
     
-    # return prediction for a single message 
     predict = function(message)
     {
-         # TODO
+      
     },
     
     # score you test set so to get the understanding how well you model
@@ -195,7 +196,7 @@ naiveBayes <- setRefClass("naiveBayes",
 ))
 
 model = naiveBayes()
-model$fit()
+model$fit(X_train, Y_train)
 ```
 
 ## Measure effectiveness of your classifier
