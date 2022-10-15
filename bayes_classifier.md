@@ -50,7 +50,8 @@ library(wordcloud)
 list.files(getwd()) # Should print "bayes_classifier.Rmd" "data" "README.md"
 ```
 
-    ## [1] "bayes_classifier.Rmd" "data"                 "README.md"
+    ## [1] "bayes_classifier.md"    "bayes_classifier.Rmd"   "bayes_classifier_files"
+    ## [4] "data"                   "README.md"
 
 ``` r
 list.files("data")  # Should print "stop_words.txt" "test.csv" "train.csv" 
