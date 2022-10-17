@@ -151,8 +151,14 @@ naiveBayes <- setRefClass("naiveBayes",
         X_test %>% group_by(Message) %>% transmute(Predicted=predict(Message)),
         y_test %>% transmute(Actual = ifelse(Category == "spam", TRUE, FALSE)))
       
-      return (sum(data %>% transmute(
-        diff = ifelse(Predicted == Actual, 1, 0))) / nrow(X_test))
+      tp <- nrow(data[data$Predicted == TRUE & data$Actual == TRUE,])
+      tn <- nrow(data[data$Predicted == FALSE & data$Actual == FALSE,])
+      fp <- nrow(data[data$Predicted == FALSE & data$Actual == TRUE,])
+      fn <- nrow(data[data$Predicted == TRUE & data$Actual == FALSE,])
+      precision <- tp / (tp + fp)
+      recall <- tp / (tp + fn)
+      
+      return (2 * precision * recall / (precision + recall))
     }
 ))
 

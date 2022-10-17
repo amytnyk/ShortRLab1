@@ -63,8 +63,8 @@ library(wordcloud)
 list.files(getwd()) # Should print "bayes_classifier.Rmd" "data" "README.md"
 ```
 
-    ## [1] "bayes_classifier.md"    "bayes_classifier.Rmd"   "bayes_classifier_files"
-    ## [4] "data"                   "README.md"
+    ## [1] "bayes_classifier.Rmd"   "bayes_classifier_files" "data"                  
+    ## [4] "README.md"
 
 ``` r
 list.files("data")  # Should print "stop_words.txt" "test.csv" "train.csv" 
@@ -165,8 +165,14 @@ naiveBayes <- setRefClass("naiveBayes",
         X_test %>% group_by(Message) %>% transmute(Predicted=predict(Message)),
         y_test %>% transmute(Actual = ifelse(Category == "spam", TRUE, FALSE)))
       
-      return (sum(data %>% transmute(
-        diff = ifelse(Predicted == Actual, 1, 0))) / nrow(X_test))
+      tp <- nrow(data[data$Predicted == TRUE & data$Actual == TRUE,])
+      tn <- nrow(data[data$Predicted == FALSE & data$Actual == FALSE,])
+      fp <- nrow(data[data$Predicted == FALSE & data$Actual == TRUE,])
+      fn <- nrow(data[data$Predicted == TRUE & data$Actual == FALSE,])
+      precision <- tp / (tp + fp)
+      recall <- tp / (tp + fn)
+      
+      return (2 * precision * recall / (precision + recall))
     }
 ))
 
@@ -175,7 +181,7 @@ model$fit(X_train, Y_train)
 model$score(test["Message"], test["Category"])
 ```
 
-    ## [1] 0.9789644
+    ## [1] 0.9207317
 
 ## Measure effectiveness of your classifier
 
