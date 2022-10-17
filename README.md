@@ -147,22 +147,26 @@ naiveBayes <- setRefClass("naiveBayes",
     {
       message <- tibble('Message' = message) %>%
                   unnest_tokens('Word', 'Message', token="words") %>%
-                  filter(!Word %in% stop_words) %>% merge(words)
-     probability <- message %>% transmute(pspam = (Spam + 1) / spam_words_cnt, pham = (Ham + 1) / ham_words_cnt)
-      return (prod(probability$pspam) * spam_messages_cnt > prod(probability$pham) * ham_messages_cnt)
+                  filter(!Word %in% stop_words) %>%
+                  merge(words, by = "Word", all.x = TRUE)
+      message[is.na(message)] = 0
+      
+      probability <- message %>% transmute(
+        pspam = (Spam + 1) / (nrow(words) + spam_words_cnt),
+        pham = (Ham + 1) / (nrow(words) + ham_words_cnt))
+      
+      return (prod(probability$pspam) * spam_messages_cnt >
+              prod(probability$pham) * ham_messages_cnt)
     },
     
-    # score you test set so to get the understanding how well you model
-    # works.
-    # look at f1 score or precision and recall
-    # visualize them 
-    # try how well your model generalizes to real world data! 
     score = function(X_test, y_test)
     {
       data <- data.frame(
         X_test %>% group_by(Message) %>% transmute(Predicted=predict(Message)),
         y_test %>% transmute(Actual = ifelse(Category == "spam", TRUE, FALSE)))
-      return (sum(data %>% transmute(diff = ifelse(Predicted == Actual, 1, 0))) / nrow(X_test))
+      
+      return (sum(data %>% transmute(
+        diff = ifelse(Predicted == Actual, 1, 0))) / nrow(X_test))
     }
 ))
 
@@ -171,7 +175,7 @@ model$fit(X_train, Y_train)
 model$score(test["Message"], test["Category"])
 ```
 
-    ## [1] 0.9797735
+    ## [1] 0.9789644
 
 ## Measure effectiveness of your classifier
 
