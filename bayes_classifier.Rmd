@@ -181,11 +181,11 @@ model$score(test["Message"], test["Category"])[1]
 -   Show failure cases.
 
 ```{r}
-x = seq(0, 1, length = 20)
+x = seq(0.05, 0.95, length = 18)
 y = sapply(x, model$score, X_test = test["Message"], y_test = test["Category"])
 
-Precision = y[,2]
-Recall = y[,3]
+Precision <- y[2,]
+Recall <- y[3,]
 
 plot(Recall, Precision, xlab = "Recall", ylab = "Precision", ylim = c(0,1), xlim = c(0,1))
 ```
