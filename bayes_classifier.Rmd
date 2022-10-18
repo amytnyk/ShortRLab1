@@ -168,7 +168,7 @@ naiveBayes <- setRefClass("naiveBayes",
     }
 ))
 
-model = naiveBayes()
+model <- naiveBayes()
 model$fit(X_train, Y_train)
 model$score(test["Message"], test["Category"])[1]
 ```
