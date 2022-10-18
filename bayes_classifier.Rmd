@@ -2,9 +2,6 @@
 editor_options:
   markdown:
     wrap: 72
-output:
-  md_document:
-    variant: markdown_github
 ---
 
 ```{r setup, include=FALSE}
@@ -26,23 +23,23 @@ $$\mathsf{P}(\mathrm{class}\mid \mathrm{observation})=\frac{\mathsf{P}(\mathrm{o
 
 Under the strong independence assumption, one can calculate
 $\mathsf{P}(\mathrm{observation} \mid \mathrm{class})$ as
-$$\mathsf{P}(\mathrm{observation}) = \prod_{i=1}^{n} \mathsf{P}(\mathrm{feature}_i), \qquad \mathsf{P}(\mathrm{observation} \mid \mathrm{class}) = \prod_{i=1}^{n} \mathsf{P}(\mathrm{feature}_i \mid \mathrm{class}),$$
-where $n$ is the total number of features describing a given
-observation. Thus, $\mathsf{P}(\mathrm{class}|\mathrm{observation})$ now
-can be calculated as
+$$\qquad \mathsf{P}(\mathrm{observation} \mid \mathrm{class}) = \prod_{i=1}^{n} \mathsf{P}(\mathrm{feature}_i \mid \mathrm{class}),$$where
+$n$ is the total number of features describing a given observation.
+Thus, $\mathsf{P}(\mathrm{class}\mid\mathrm{observation})$ now can be
+calculated as
 
-$$\mathsf{P}(\mathrm{class} \mid \mathrm{\mathrm{observation}}) = \mathsf{P}(\mathrm{class})\times \prod_{i=1}^{n}\frac{\mathsf{P}(\mathrm{feature}_i\mid \mathrm{class})}{\mathsf{P}(\mathrm{feature}_i)}$$Hence,
-$$\mathsf{P}(\mathrm{spam} \mid \mathrm{message})=\mathsf{P}(spam)\times\prod_{i=1}^{n}\frac{\mathsf{P}(\mathrm{word}_i\mid \mathrm{spam})}{\mathsf{P}(\mathrm{word}_i)},\ \mathsf{P}(\mathrm{spam})=\frac{\mathrm{M}_s}{\mathrm{M}}$$
+$$\mathsf{P}(\mathrm{class} \mid \mathrm{\mathrm{observation}}) = \mathsf{P}(\mathrm{class})\times \prod_{i=1}^{n}\frac{\mathsf{P}(\mathrm{feature}_i\mid \mathrm{class})}{\mathsf{P}(\mathrm{feature}_i)}$$Since
+$\mathsf{P}(\mathrm{observation})$ does not depend on class(spam or ham)
+we can just compare the values of
+$\mathsf{P}(\mathrm{spam} \mid \mathrm{message})\cdot\mathsf{P}(\mathrm{spam})$
+and
+$\mathsf{P}(\mathrm{ham} \mid \mathrm{message})\cdot\mathsf{P}(\mathrm{ham})$
+without calculating $\mathsf{P}(\mathrm{observation})$
 
-$$
-\mathsf{P}(\mathrm{word}_i)=\frac{\mathrm{W}_{\mathrm{word}_i}}{\mathrm{W}},
-\mathsf{P}(\mathrm{word}_i\mid \mathrm{spam})=\frac{\mathrm{S}_{\mathrm{word}_i}}{\mathrm{S}}
-$$
-
-Since, for ham $M$ and $\mathsf{P}(\mathrm{word}_i)$ are the same, we
-should compare
-
-$\mathrm{M}_s\times$
+In other words - comparing
+$\mathsf{P}(\mathrm{spam})\cdot\prod_{i=1}^{n} \mathsf{P}(\mathrm{word}_i \mid \mathrm{spam})$
+and
+$\mathsf{P}(\mathrm{ham})\cdot\prod_{i=1}^{n} \mathsf{P}(\mathrm{word}_i \mid \mathrm{ham})$
 
 **Necessary libraries**
 
@@ -129,7 +126,7 @@ naiveBayes <- setRefClass("naiveBayes",
       ham_words_cnt <<- sum(words$Ham)
     },
     
-    predict = function(message, threshold)
+    predict = function(message, threshold = 0.5)
     {
       message <- tibble('Message' = message) %>%
                   unnest_tokens('Word', 'Message', token="words") %>%
@@ -173,19 +170,15 @@ model$fit(X_train, Y_train)
 f1_score = model$score(test["Message"], test["Category"])[1]
 ```
 
-## Measure effectiveness of your classifier
-
--   Note that accuracy is not always a good metric for your classifier.
-    Look at precision and recall curves, F1 score metric.
--   Visualize them.
--   Show failure cases.
+## Effectiveness of the implemented classifier
 
 ### F1 score
 
 Calculated for a threshold of 0.5. It is a harmonic mean of precision
 and recall, so its high value corresponds to the high value of both
 parameters (it can also be seen on the recall-precision curve), meaning
-that the classifier has a low rate of both incorrect positive and negative predictions
+that the classifier has a low rate of both incorrect positive and
+negative predictions
 
 ```{r}
 f1_score
@@ -231,31 +224,44 @@ Both recall and precision have high values.
 plot(Recall, Precision, xlab = "Recall", ylab = "Precision", ylim = c(0.5,1), xlim = c(0,1))
 ```
 
-### Some false negative cases
+### False negative cases
 
 ```{r}
-fp <- data[data$Predicted == FALSE & data$Actual == TRUE, "Message"]
-fp
+data[data$Predicted == FALSE & data$Actual == TRUE, "Message"]
 ```
 
-### Some false positive cases
+### False positive cases
 
 ```{r}
-fn <- data[data$Predicted == TRUE & data$Actual == FALSE,"Message"]
-fn
+data[data$Predicted == TRUE & data$Actual == FALSE, "Message"]
 ```
 
 ## Conclusions
 
-Summarize your work by explaining in a few sentences the points listed
-below.
+-   The method is quite simple: we use the Bayes' theorem to find the
+    probability that message belongs to a certain class (spam) by
+    calculating the chance of the message appearing if the class is
+    already known. The mathematical foundation is (as it was already
+    said) the Bayes' theorem, on which we base the main "predict"
+    function, and the Laplace smoothing, used to prevent errors due to
+    the possible zero-probabilities. There are also several smaller
+    tricks such as (1) reducing the fraction of the probability to the
+    terms which are different in spam_probability and
+    non-spam_probability, as we need it only for comparison and (2)
+    proportionally increasing the chances for their sum to become 1 to
+    be able to use a threshold coefficient.
 
--   Describe the method implemented in general. Show what are
-    mathematical foundations you are basing your solution on.
--   List pros and cons of the method. This should include the
-    limitations of your method, all the assumption you make about the
-    nature of your data etc.
-
-
-- The method is quite simple: we use the Bayes' theorem to find the probability that message belongs to a certain class (spam) by calculating the chance of the message appearing if the class is already known. The mathematical foundation is (as it was already said) the Bayes' theorem, on which we base the main "predict" function, and the Laplace smoothing, used to prevent errors due to the possible zero-probabilities. There are also several smaller tricks such as (1)reducing the fraction of the probability to the terms which are different in spam_probability and non-spam_probability, as we need it only for comparison or (2)proportionally increasing the chances for their sum to become 1 to be able to use a threshold coefficient.
-- The main advantages of the method are its simplicity and sufficient accuracy (which depends on the data set but may be high as shown above). The biggest assumption (and the disadvantage that it creates) is the assumption of independence of separate words belonging to the message. It means that we assume that the words do not build logical connections that make the chance of belonging to the class higher, which is obviously not correct, yet due to the existence of common spam topics, each word with its independent from the context meaning has a significant chance of being located in such a topic. A big limitation is that the classifier needs a balanced data set. The imbalanced one will lead to good accuracy on this exact data set (its testing part) yet quite low recall and precision rates which are much more important when it is expected to be able to analyze fresh data from another source.
+-   The main advantages of the method are its simplicity and sufficient
+    accuracy (which depends on the data set but may be high as shown
+    above). The biggest assumption (and the disadvantage that it
+    creates) is the assumption of independence of separate words
+    belonging to the message. It means that we assume that the words do
+    not build logical connections that make the chance of belonging to
+    the class higher, which is obviously not correct, yet due to the
+    existence of common spam topics, each word with its independent from
+    the context meaning has a significant chance of being located in
+    such a topic. A big limitation is that the classifier needs a
+    balanced data set. The imbalanced one will lead to good accuracy on
+    this exact data set (its testing part) yet quite low recall and
+    precision rates which are much more important when it is expected to
+    be able to analyze fresh data from another source.
