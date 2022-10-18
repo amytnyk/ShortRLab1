@@ -170,7 +170,7 @@ naiveBayes <- setRefClass("naiveBayes",
 
 model <- naiveBayes()
 model$fit(X_train, Y_train)
-model$score(test["Message"], test["Category"])[1]
+f1_score = model$score(test["Message"], test["Category"])[1]
 ```
 
 ## Measure effectiveness of your classifier
@@ -180,14 +180,69 @@ model$score(test["Message"], test["Category"])[1]
 -   Visualize them.
 -   Show failure cases.
 
+### F1 score
+
+Calculated for a threshold of 0.5. It is a harmonic mean of precision
+and recall, so its high value corresponds to the high value of both
+parameters (it can also be seen on the recall-precision curve).
+
 ```{r}
-x = seq(0.05, 0.95, length = 18)
-y = sapply(x, model$score, X_test = test["Message"], y_test = test["Category"])
+f1_score
+```
+
+### Data receiving for plots and lists of failures
+
+(lasts nearly 3 minutes and is unnecessary if the variables are already
+saved)
+
+```{r}
+x <- seq(0.05, 0.95, length = 19)
+x <- append(x, seq(0.0025, 0.01, length = 4)) 
+
+y <- sapply(x, model$score, X_test = test["Message"], y_test = test["Category"])
 
 Precision <- y[2,]
 Recall <- y[3,]
 
-plot(Recall, Precision, xlab = "Recall", ylab = "Precision", ylim = c(0,1), xlim = c(0,1))
+
+data <- data.frame(
+        test["Message"] %>% group_by(Message) %>% transmute(Predicted = model$predict(Message, threshold = 0.5)),
+        test["Category"] %>% transmute(Actual = ifelse(Category == "spam", TRUE, FALSE)))
+```
+
+### Precision for different thresholds
+
+```{r}
+plot(x, Precision, xlab = "Threshold", ylab = "Precision")
+```
+
+### Recall for different thresholds
+
+```{r}
+plot(x, Recall, xlab = "Threshold", ylab = "Recall")
+```
+
+### Precision-recall curve
+
+Both recall and precision have high values, meaning that the false
+positive and false negative rates are very low.
+
+```{r}
+plot(Recall, Precision, xlab = "Recall", ylab = "Precision", ylim = c(0.5,1), xlim = c(0,1))
+```
+
+### Some false negative cases
+
+```{r}
+fp <- data[data$Predicted == FALSE & data$Actual == TRUE, "Message"]
+fp
+```
+
+### Some false positive cases
+
+```{r}
+fn <- data[data$Predicted == TRUE & data$Actual == FALSE,"Message"]
+fn
 ```
 
 ## Conclusions
@@ -200,3 +255,8 @@ below.
 -   List pros and cons of the method. This should include the
     limitations of your method, all the assumption you make about the
     nature of your data etc.
+
+
+- The method is quite simple, the mathematical foundation is the Bayes' theorem, the 
+- The biggest assumption made to implement classifier is the assumption of independence of separate words belonging to the message.
+It means that we assume that the words do not build logical connections that make the chance of belonging to the class higher, which is obviously not correct, yet due to the existence of common spam topics each word, having it
