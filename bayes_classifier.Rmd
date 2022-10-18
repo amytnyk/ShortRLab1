@@ -238,7 +238,9 @@ data[data$Predicted == TRUE & data$Actual == FALSE, "Message"]
 
 ## Conclusions
 
--   The method is quite simple: we use the Bayes' theorem to find the
+-   **Describe the method implemented in general. Show what are
+    mathematical foundations you are basing your solution on**. The
+    method is quite simple: we use the Bayes' theorem to find the
     probability that message belongs to a certain class (spam) by
     calculating the chance of the message appearing if the class is
     already known. The mathematical foundation is (as it was already
@@ -251,17 +253,19 @@ data[data$Predicted == TRUE & data$Actual == FALSE, "Message"]
     proportionally increasing the chances for their sum to become 1 to
     be able to use a threshold coefficient.
 
--   The main advantages of the method are its simplicity and sufficient
-    accuracy (which depends on the data set but may be high as shown
-    above). The biggest assumption (and the disadvantage that it
-    creates) is the assumption of independence of separate words
-    belonging to the message. It means that we assume that the words do
-    not build logical connections that make the chance of belonging to
-    the class higher, which is obviously not correct, yet due to the
-    existence of common spam topics, each word with its independent from
-    the context meaning has a significant chance of being located in
-    such a topic. A big limitation is that the classifier needs a
-    balanced data set. The imbalanced one will lead to good accuracy on
-    this exact data set (its testing part) yet quite low recall and
-    precision rates which are much more important when it is expected to
-    be able to analyze fresh data from another source.
+-   **List pros and cons of the method. This should include the
+    limitations of your method, all the assumption you make about the
+    nature of your data etc.** The main advantages of the method are its
+    simplicity and sufficient accuracy (which depends on the data set
+    but may be high as shown above). The biggest assumption (and the
+    disadvantage that it creates) is the assumption of independence of
+    separate words belonging to the message. It means that we assume
+    that the words do not build logical connections that make the chance
+    of belonging to the class higher, which is obviously not correct,
+    yet due to the existence of common spam topics, each word with its
+    independent from the context meaning has a significant chance of
+    being located in such a topic. A big limitation is that the
+    classifier needs a balanced data set. The imbalanced one will lead
+    to good accuracy on this exact data set (its testing part) yet quite
+    low recall and precision rates which are much more important when it
+    is expected to be able to analyze fresh data from another source.
