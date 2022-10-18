@@ -63,8 +63,8 @@ library(wordcloud)
 list.files(getwd()) # Should print "bayes_classifier.Rmd" "data" "README.md"
 ```
 
-    ## [1] "bayes_classifier.Rmd"   "bayes_classifier_files" "data"                  
-    ## [4] "README.md"
+    ## [1] "bayes_classifier.md"    "bayes_classifier.Rmd"   "bayes_classifier_files"
+    ## [4] "data"                   "README.md"
 
 ``` r
 list.files("data")  # Should print "stop_words.txt" "test.csv" "train.csv" 
@@ -154,9 +154,9 @@ naiveBayes <- setRefClass("naiveBayes",
       probability <- message %>% transmute(
         pspam = (Spam + 1) / (nrow(words) + spam_words_cnt),
         pham = (Ham + 1) / (nrow(words) + ham_words_cnt))
-      
-      return (prod(probability$pspam) * spam_messages_cnt >
-              prod(probability$pham) * ham_messages_cnt)
+      p_spam = prod(probability$pspam) * spam_messages_cnt
+      p_ham = prod(probability$pham) * ham_messages_cnt
+      return (p_spam > 0.5 * (p_spam + p_ham))
     },
     
     score = function(X_test, y_test)
@@ -176,8 +176,9 @@ naiveBayes <- setRefClass("naiveBayes",
     }
 ))
 
-model = naiveBayes()
+model <- naiveBayes()
 model$fit(X_train, Y_train)
+#model$predict("free sadlksas asdfjhsadfjk hasd fkhadsfjk asdfj hkadsf ")
 model$score(test["Message"], test["Category"])
 ```
 
