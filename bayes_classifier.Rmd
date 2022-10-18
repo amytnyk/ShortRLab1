@@ -129,7 +129,7 @@ naiveBayes <- setRefClass("naiveBayes",
       ham_words_cnt <<- sum(words$Ham)
     },
     
-    predict = function(message)
+    predict = function(message, threshold)
     {
       message <- tibble('Message' = message) %>%
                   unnest_tokens('Word', 'Message', token="words") %>%
@@ -141,14 +141,19 @@ naiveBayes <- setRefClass("naiveBayes",
         pspam = (Spam + 1) / (nrow(words) + spam_words_cnt),
         pham = (Ham + 1) / (nrow(words) + ham_words_cnt))
       
+      # In the end, we simplify the probabilities through removing denominators as they are the same
+      # The below inequality means that normalized (meaning p_spam/(p_spam + p_ham)) chance
+      # of message being spam is greater than the threshold:
+      # p_spam/(p_spam + p_ham) > k -> p_spam*(1-k) > p_ham*k -> p_spam > (k/(1-k))*p_ham
+      
       return (prod(probability$pspam) * spam_messages_cnt >
-              prod(probability$pham) * ham_messages_cnt)
+              (threshold / (1 - threshold)) * prod(probability$pham) * ham_messages_cnt)
     },
     
-    score = function(X_test, y_test)
+    score = function(X_test, y_test, threshold = 0.5)
     {
       data <- data.frame(
-        X_test %>% group_by(Message) %>% transmute(Predicted=predict(Message)),
+        X_test %>% group_by(Message) %>% transmute(Predicted=predict(Message, threshold)),
         y_test %>% transmute(Actual = ifelse(Category == "spam", TRUE, FALSE)))
       
       tp <- nrow(data[data$Predicted == TRUE & data$Actual == TRUE,])
@@ -157,14 +162,15 @@ naiveBayes <- setRefClass("naiveBayes",
       fn <- nrow(data[data$Predicted == TRUE & data$Actual == FALSE,])
       precision <- tp / (tp + fp)
       recall <- tp / (tp + fn)
+      f1 <- (2 * precision * recall / (precision + recall))
       
-      return (2 * precision * recall / (precision + recall))
+      return (list(f1, precision, recall))
     }
 ))
 
 model = naiveBayes()
 model$fit(X_train, Y_train)
-model$score(test["Message"], test["Category"])
+model$score(test["Message"], test["Category"])[1]
 ```
 
 ## Measure effectiveness of your classifier
@@ -173,6 +179,16 @@ model$score(test["Message"], test["Category"])
     Look at precision and recall curves, F1 score metric.
 -   Visualize them.
 -   Show failure cases.
+
+```{r}
+x = seq(0, 1, length = 20)
+y = sapply(x, model$score, X_test = test["Message"], y_test = test["Category"])
+
+Precision = y[,2]
+Recall = y[,3]
+
+plot(Recall, Precision, xlab = "Recall", ylab = "Precision", ylim = c(0,1), xlim = c(0,1))
+```
 
 ## Conclusions
 
